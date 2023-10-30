@@ -3,3 +3,4 @@ Werkzeug
 tensorflow
 opencv-python
 numpy
+gunicorn
