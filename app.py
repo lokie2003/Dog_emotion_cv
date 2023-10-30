@@ -3,8 +3,8 @@ import numpy as np
 import tensorflow as tf
 import pathlib
 import tensorflow_hub as hub
-import cv2  # Import OpenCV
 from PIL import Image
+import cv2  # Import OpenCV
 
 # Register the custom KerasLayer
 hub_layer = hub.KerasLayer("https://tfhub.dev/google/imagenet/resnet_v2_50/feature_vector/4", trainable=False)
@@ -27,6 +27,32 @@ def preprocess_image_cv2(image):
     img = img / 255.0  # Normalize the image
     return img
 
+# Function to perform image prediction
+def perform_image_prediction():
+    # Capture an image using the computer's camera
+    camera = cv2.VideoCapture(0)
+
+    if st.button("Capture Image"):
+        ret, frame = camera.read()
+        if ret:
+            st.image(frame, caption='Captured Image', use_column_width=True)
+            
+            # Process the captured image using OpenCV
+            processed_image = preprocess_image_cv2(frame)
+
+            # Make a prediction
+            prediction = model.predict(np.expand_dims(processed_image, axis=0))
+            predicted_class_index = np.argmax(prediction)
+            predicted_class = emotion_labels[predicted_class_index]
+            predicted_class_probability = prediction[0][predicted_class_index]
+
+            # Display the prediction
+            st.write(f'Predicted Emotion: {predicted_class}')
+            st.write(f'Predicted Emotion Probability: {predicted_class_probability:.2f}')
+    
+    # Release the camera when done
+    camera.release()
+
 # Streamlit UI
 st.title('DOG EMOTION CLASSIFIER')
 # Add borders to separate tabs
@@ -43,31 +69,9 @@ selected_tab = st.selectbox("SELECT A TAB", ["INTRODUCTION", "PREDICTION"])
 if selected_tab == "INTRODUCTION":
     st.title('INTRODUCTION')
     st.write('THIS IS DOG EMOTION CLASSIFIER USING RESNET FEATURE ENGINEERING')
-    st.write('UPLOAD A DOG PICTURE TO CHECK ITS EMOTION')
+    st.write('UPLOAD A DOG PICTURE OR CAPTURE ONE USING YOUR CAMERA TO CHECK ITS EMOTION')
 
 # Prediction tab
 if selected_tab == "PREDICTION":
     st.title('PREDICTION')
-    # Upload an image
-    uploaded_image = st.file_uploader('Upload a dog image', type=['jpg', 'jpeg'])
-
-    if uploaded_image is not None:
-        # Display the uploaded image
-        image = Image.open(uploaded_image)
-        st.image(image, caption='Uploaded Image', use_column_width=True)
-
-        # Convert the PIL image to a NumPy array
-        image_np = np.array(image)
-
-        # Process the image using OpenCV
-        processed_image = preprocess_image_cv2(image_np)
-
-        # Make a prediction
-        prediction = model.predict(np.expand_dims(processed_image, axis=0))
-        predicted_class_index = np.argmax(prediction)
-        predicted_class = emotion_labels[predicted_class_index]
-        predicted_class_probability = prediction[0][predicted_class_index]
-
-        # Display the prediction
-        st.write(f'Predicted Emotion: {predicted_class}')
-        st.write(f'Predicted Emotion Probability: {predicted_class_probability:.2f}')
+    perform_image_prediction()
