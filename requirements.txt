@@ -1,6 +1,5 @@
-streamlit
+Flask
+Werkzeug
 tensorflow
-tensorflow-hub
-Pillow
-cv2
-
+opencv-python
+numpy
