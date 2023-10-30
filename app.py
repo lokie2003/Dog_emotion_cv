@@ -4,7 +4,7 @@ import tensorflow as tf
 import pathlib
 import tensorflow_hub as hub
 from PIL import Image
-import cv2
+
 
 # Register the custom KerasLayer
 hub_layer = hub.KerasLayer("https://tfhub.dev/google/imagenet/resnet_v2_50/feature_vector/4", trainable=False)
