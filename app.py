@@ -2,6 +2,8 @@ import streamlit as st
 import tensorflow as tf
 import tensorflow_hub as hub
 from PIL import Image
+from st_webrtc import st_webrtc
+
 
 from aiortc.contrib.media import MediaPlayer
 
