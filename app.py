@@ -2,7 +2,7 @@ import streamlit as st
 import tensorflow as tf
 import tensorflow_hub as hub
 from PIL import Image
-from streamlit_webrtc import streamlit_webrtc
+from streamlit_webrtc import st_webrtc
 
 
 from aiortc.contrib.media import MediaPlayer
@@ -41,7 +41,7 @@ def perform_image_prediction(image):
 # Streamlit UI
 st.title('DOG EMOTION CLASSIFIER')
 # Create a webrtc context
-webrtc_ctx = streamlit_webrtc.VideoTransformerCanvas()
+webrtc_ctx = st_webrtc.VideoTransformerCanvas()
 
 # Create tabs using selectbox
 selected_tab = st.selectbox("SELECT A TAB", ["INTRODUCTION", "PREDICTION"])
