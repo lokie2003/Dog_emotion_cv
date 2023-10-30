@@ -4,4 +4,4 @@ scikit-learn
 numpy
 pandas
 tensorflow_hub
-openCV
+opencv-python==4.5.3.56
