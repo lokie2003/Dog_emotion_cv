@@ -1,6 +1,6 @@
 streamlit
-numpy
 tensorflow
 tensorflow-hub
 Pillow
-
+aiortc
+streamlit-webrtc
