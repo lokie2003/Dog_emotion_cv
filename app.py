@@ -1,10 +1,9 @@
 import streamlit as st
-import numpy as np
 import tensorflow as tf
-import pathlib
 import tensorflow_hub as hub
 from PIL import Image
-import cv2  # Import OpenCV
+
+from aiortc.contrib.media import MediaPlayer
 
 # Register the custom KerasLayer
 hub_layer = hub.KerasLayer("https://tfhub.dev/google/imagenet/resnet_v2_50/feature_vector/4", trainable=False)
@@ -20,48 +19,28 @@ def load_model():
 
 model = load_model()
 
-# Define a function to preprocess the image using OpenCV
-def preprocess_image_cv2(image):
+# Function to preprocess the image
+def preprocess_image(image):
     # Resize the image to 224x224 pixels
-    img = cv2.resize(image, (224, 224))
-    img = img / 255.0  # Normalize the image
-    return img
+    image = image.resize((224, 224))
+    image = tf.image.convert_image_dtype(image, tf.float32) / 255.0
+    return image
 
 # Function to perform image prediction
-def perform_image_prediction():
-    # Capture an image using the computer's camera
-    camera = cv2.VideoCapture(0)
+def perform_image_prediction(image):
+    # Make a prediction
+    prediction = model.predict(tf.expand_dims(image, axis=0))
+    predicted_class_index = tf.argmax(prediction)
+    predicted_class = emotion_labels[predicted_class_index]
+    predicted_class_probability = prediction[0][predicted_class_index]
 
-    if st.button("Capture Image"):
-        ret, frame = camera.read()
-        if ret:
-            st.image(frame, caption='Captured Image', use_column_width=True)
-            
-            # Process the captured image using OpenCV
-            processed_image = preprocess_image_cv2(frame)
-
-            # Make a prediction
-            prediction = model.predict(np.expand_dims(processed_image, axis=0))
-            predicted_class_index = np.argmax(prediction)
-            predicted_class = emotion_labels[predicted_class_index]
-            predicted_class_probability = prediction[0][predicted_class_index]
-
-            # Display the prediction
-            st.write(f'Predicted Emotion: {predicted_class}')
-            st.write(f'Predicted Emotion Probability: {predicted_class_probability:.2f}')
-    
-    # Release the camera when done
-    camera.release()
+    return predicted_class, predicted_class_probability
 
 # Streamlit UI
 st.title('DOG EMOTION CLASSIFIER')
-# Add borders to separate tabs
-st.markdown(
-    "<style>"
-    ".stSelectbox { border: 2px solid #ccc; border-radius: 4px; padding: 8px; }"
-    "</style>",
-    unsafe_allow_html=True,
-)
+# Create a webrtc context
+webrtc_ctx = st_webrtc.VideoTransformerCanvas()
+
 # Create tabs using selectbox
 selected_tab = st.selectbox("SELECT A TAB", ["INTRODUCTION", "PREDICTION"])
 
@@ -74,4 +53,21 @@ if selected_tab == "INTRODUCTION":
 # Prediction tab
 if selected_tab == "PREDICTION":
     st.title('PREDICTION')
-    perform_image_prediction()
+    image_data = webrtc_ctx.frame
+
+    if st.button("Classify Emotion"):
+        if image_data is not None:
+            # Convert the image to a format suitable for the model
+            pil_image = Image.fromarray(image_data)
+            processed_image = preprocess_image(pil_image)
+
+            # Perform the prediction
+            predicted_class, predicted_class_probability = perform_image_prediction(processed_image)
+
+            # Display the prediction
+            st.image(pil_image, caption='Captured Image', use_column_width=True)
+            st.write(f'Predicted Emotion: {predicted_class}')
+            st.write(f'Predicted Emotion Probability: {predicted_class_probability:.2f}')
+
+# Release the camera when done
+webrtc_ctx.stop()
